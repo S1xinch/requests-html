@@ -201,6 +201,10 @@ class BaseParser:
 
         If ``first`` is ``True``, only returns the first
         :class:`Element <Element>` found.
+        If no matching elements are found:
+        - returns ``None`` when ``first`` is ``True``
+        - returns an empty list when ``first`` is ``False``
+
         """
 
         # Convert a single containing into a list.
