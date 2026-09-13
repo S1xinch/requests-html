@@ -567,10 +567,10 @@ class HTML(BaseParser):
         cookie_render = {}
         def __convert(cookiejar, key):
             try:
-                v = eval ("cookiejar."+key)
+                v = getattr(cookiejar, key, None)
                 if not v: kv = ''
                 else: kv = {key: v}
-            except:
+            except Exception:
                 kv = ''
             return kv
 
