@@ -3,8 +3,25 @@ Requests-HTML: HTML Parsing for Humans™
 
 .. image:: https://farm5.staticflickr.com/4695/39152770914_a3ab8af40d_k_d.jpg
 
-.. image:: https://travis-ci.com/psf/requests-html.svg?branch=master
-    :target: https://travis-ci.com/psf/requests-html
+.. image:: https://github.com/S1xinch/requests-html/actions/workflows/tests.yml/badge.svg
+    :target: https://github.com/S1xinch/requests-html/actions/workflows/tests.yml
+
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+    :target: https://github.com/S1xinch/requests-html/blob/master/LICENSE
+
+**This is a community-maintained fork.** The original
+`psf/requests-html <https://github.com/psf/requests-html>`_ has had no
+release since 0.10.0 (Feb 2019) and no commits to ``master`` since April
+2023. This fork picks development back up: it carries a security fix
+(unmerged upstream for months — `#612
+<https://github.com/psf/requests-html/pull/612>`_), several other
+long-stuck upstream bugfixes, and fixes for real install/runtime breakage
+caught by getting CI running again. See the `v0.11.0 release notes
+<https://github.com/S1xinch/requests-html/releases/tag/v0.11.0>`_ for the
+full list, and `Known Issues`_ below for what's still broken. A request to
+take over the ``requests-html`` name on PyPI is open at `pypi/support#12243
+<https://github.com/pypi/support/issues/12243>`_; until that resolves,
+install from this repository directly (see `Installation`_).
 
 This library intends to make parsing HTML (e.g. scraping the web) as
 simple and intuitive as possible.
@@ -155,6 +172,13 @@ XPath is also supported:
 JavaScript Support
 ==================
 
+.. note::
+   The example below targets ``pythonclock.org``, a page that showed a
+   countdown to Python 2's 2020 end-of-life. It's a leftover from the
+   original docs and the site may no longer exist or render the same way —
+   the mechanics of ``render()`` shown here are still accurate, but don't
+   expect to reproduce this exact output.
+
 Let's grab some text that's rendered by JavaScript. Until 2020, the Python 2.7 countdown clock (https://pythonclock.org) will serve as a good test page:
 
 .. code-block:: pycon
@@ -261,12 +285,63 @@ You can also use this library without Requests:
     {'https://httpbin.org'}
 
 
+Known Issues
+============
+
+``requests-html``'s biggest structural problem is that ``render()`` depends
+on pyppeteer (see `If that download fails`_ above), which is itself
+unmaintained and increasingly can't find or launch a working Chromium
+build. That's the root cause behind most of the recurring reports:
+
+- Chromium fails to download or launch: `#571`_, `#249
+  <https://github.com/psf/requests-html/issues/249>`_ (Windows
+  ``PermissionError``) — see `If that download fails`_ above for a
+  workaround.
+- ``HTMLSession`` (the synchronous session) can crash with
+  ``RuntimeError: no current event loop`` when constructed after other
+  async code has run in the same process — depends on execution order,
+  not something this fork has fixed yet: `#294
+  <https://github.com/psf/requests-html/issues/294>`_.
+- ``render()`` is easily blocked by modern anti-bot/anti-scraping
+  protections: `#275 <https://github.com/psf/requests-html/issues/275>`_.
+
+This is not exhaustive — the upstream backlog has 240+ open issues. If you
+hit something not listed here, check upstream first; if it's not already
+reported, open it against this fork.
+
 Installation
 ============
 
+This isn't on PyPI as ``requests-html`` yet — that name is still owned by
+the (inactive) upstream project pending `a transfer request
+<https://github.com/pypi/support/issues/12243>`_. Until then, install
+straight from this repository:
+
 .. code-block:: shell
 
-    $ pipenv install requests-html
-    ✨🍰✨
+    $ pip install git+https://github.com/S1xinch/requests-html.git
 
-Only **Python 3.6 and above** is supported.
+Or pin to a specific release, e.g. `v0.11.0
+<https://github.com/S1xinch/requests-html/releases/tag/v0.11.0>`_:
+
+.. code-block:: shell
+
+    $ pip install git+https://github.com/S1xinch/requests-html.git@v0.11.0
+
+**Python 3.9 and above** is tested in CI (3.6 through 3.8 may still work
+but aren't verified).
+
+Contributing
+============
+
+Issues and PRs are welcome. Tests run via GitHub Actions on every push —
+see ``.github/workflows/tests.yml``. Locally:
+
+.. code-block:: shell
+
+    $ pip install -e .
+    $ pip install pytest pytest-asyncio requests-file
+    $ pytest -v -m "not internet and not render"
+
+(``internet`` and ``render`` tests hit the network and a real browser
+respectively, so they're excluded from the default/CI run.)
