@@ -1,0 +1,38 @@
+name: Build Windows exe
+
+# Manual trigger any time (Actions tab -> Build Windows exe -> Run workflow),
+# and automatic on every tagged release so a built .exe is always available
+# for that version.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pyinstaller
+
+      - name: Build exe
+        run: >
+          pyinstaller --onefile --noconsole
+          --name requests-html-desktop
+          --collect-data fake_useragent
+          gui/app.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: requests-html-desktop-windows
+          path: dist/requests-html-desktop.exe
