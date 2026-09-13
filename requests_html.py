@@ -1,3 +1,4 @@
+import os
 import sys
 import asyncio
 from urllib.parse import urlparse, urlunparse, urljoin
@@ -763,7 +764,7 @@ class BaseSession(requests.Session):
     """
 
     def __init__(self, mock_browser : bool = True, verify : bool = True,
-                 browser_args : list = ['--no-sandbox']):
+                 browser_args : list = ['--no-sandbox'], executable_path : str = None):
         super().__init__()
 
         # Mock a web browser's user agent.
@@ -774,6 +775,10 @@ class BaseSession(requests.Session):
         self.verify = verify
 
         self.__browser_args = browser_args
+        # Falls back to REQUESTS_HTML_CHROMIUM_PATH so a working system
+        # Chrome/Chromium can be used when pyppeteer's own download fails
+        # (see https://github.com/psf/requests-html/issues/571).
+        self.__executable_path = executable_path or os.environ.get('REQUESTS_HTML_CHROMIUM_PATH')
 
 
     def response_hook(self, response, **kwargs) -> HTMLResponse:
@@ -785,7 +790,7 @@ class BaseSession(requests.Session):
     @property
     async def browser(self):
         if not hasattr(self, "_browser"):
-            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args)
+            self._browser = await pyppeteer.launch(ignoreHTTPSErrors=not(self.verify), headless=True, args=self.__browser_args, executablePath=self.__executable_path)
 
         return self._browser
 

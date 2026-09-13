@@ -1,0 +1,62 @@
+name: Publish to PyPI
+
+# Fires when a GitHub Release is published (see README/RELEASING for the
+# tag-and-release steps). Uses PyPI Trusted Publishing (OIDC) — no API
+# token stored in this repo. One-time setup required on pypi.org before
+# this will work: see the comment at the bottom of this file.
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # required for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+# --- One-time setup (do this on pypi.org, not in this file) ---
+# 1. The PyPI project name this publishes as is whatever `NAME` is set to
+#    in setup.py (currently "requests-html"). That name is still owned by
+#    the upstream psf/requests-html project until the PEP 541 transfer
+#    (github.com/pypi/support/issues/12243) resolves — publishing will
+#    fail until then, unless setup.py's NAME is changed to an unclaimed
+#    placeholder in the meantime.
+# 2. Once you control the target name on PyPI (existing project, or a
+#    brand-new one), go to that project's "Publishing" settings on
+#    pypi.org and add a trusted publisher:
+#      owner:      S1xinch
+#      repository: requests-html
+#      workflow:   publish.yml
+#      environment: pypi
+#    PyPI also supports registering a trusted publisher for a project
+#    name that doesn't exist yet ("pending publisher"), which creates the
+#    project on first successful publish — usable now if you pick a fresh
+#    placeholder name instead of waiting on the transfer.

@@ -229,6 +229,24 @@ Note, the first time you ever run the ``render()`` method, it will download
 Chromium into your home directory (e.g. ``~/.pyppeteer/``). This only happens
 once.
 
+If that download fails
+-----------------------
+
+``render()`` relies on `pyppeteer <https://github.com/pyppeteer/pyppeteer>`_
+to fetch a specific, pinned Chromium build from Google's snapshot bucket.
+Google periodically deletes old snapshots, which then breaks the download
+with an error like ``OSError: Chromium downloadable not found`` (see
+`#571 <https://github.com/psf/requests-html/issues/571>`_). If you hit this,
+skip the download entirely by pointing at a Chrome/Chromium you already have
+installed:
+
+.. code-block:: python
+
+    session = HTMLSession(executable_path='/path/to/chrome')
+
+or, without touching your code, set the ``REQUESTS_HTML_CHROMIUM_PATH``
+environment variable to the same path.
+
 Using without Requests
 ======================
 
