@@ -13,7 +13,11 @@ import http.cookiejar
 from pyquery import PyQuery
 
 from fake_useragent import UserAgent
-from lxml.html.clean import Cleaner
+try:
+    # lxml >= 5.2 split Cleaner out into the separate lxml_html_clean package.
+    from lxml.html.clean import Cleaner
+except ImportError:
+    from lxml_html_clean import Cleaner
 import lxml
 from lxml import etree
 from lxml.html import HtmlElement

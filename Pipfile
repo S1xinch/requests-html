@@ -12,6 +12,7 @@ parse = "*"
 "w3lib" = "*"
 pyppeteer = "*"
 "rfc3986" = "*"
+"lxml_html_clean" = "*"
 
 [dev-packages]
 twine = "*"
